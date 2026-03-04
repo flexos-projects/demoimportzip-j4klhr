@@ -10,7 +10,14 @@ status: active
 tags: [core]
 created: 2026-01-01
 last_modified: 2026-01-01
-relatesTo: [feature.003-task-tracking, feature.005-invoice-generation, database.004-time-entries]
+relatesTo:
+  - "feature.003-task-tracking"
+  - "feature.005-invoice-generation"
+  - "database.004-time-entries"
+  - "spaces/001-main/CONTEXT.md"
+  - "prototype/clients.html"
+  - "builds/001-initial-setup/tasks/001-scaffold.md"
+  - "pages/001-home.md"
 ---
 
 # Time Tracking
