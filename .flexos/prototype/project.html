@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nova Labs — Web App MVP · Flo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="tokens.css">
+  <style>
+    /* ── App shell ── */
+    .app { display: flex; height: 100dvh; overflow: hidden; }
+    .sidebar {
+      width: var(--sidebar-width); flex-shrink: 0;
+      background: var(--color-surface); border-right: 1px solid var(--color-border);
+      display: flex; flex-direction: column; padding: var(--space-4) 0;
+    }
+    .sidebar-logo { padding: var(--space-3) var(--space-4) var(--space-6); font-size: var(--text-lg); font-weight: 700; letter-spacing: -0.02em; color: var(--color-text); }
+    .sidebar-logo span { color: var(--color-primary-light); }
+    .sidebar-section { padding: 0 var(--space-3); margin-bottom: var(--space-6); }
+    .sidebar-label { font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--color-text-faint); padding: 0 var(--space-2); margin-bottom: var(--space-2); }
+    .sidebar-nav { display: flex; flex-direction: column; gap: 2px; }
+    .nav-item { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-2) var(--space-3); border-radius: var(--radius-md); font-size: var(--text-sm); color: var(--color-text-muted); cursor: pointer; transition: var(--transition); text-decoration: none; }
+    .nav-item:hover { background: var(--color-surface-alt); color: var(--color-text); }
+    .nav-item.active { background: var(--color-primary-faint); color: var(--color-primary-light); }
+    .nav-item .icon { font-size: 15px; width: 18px; text-align: center; }
+    .nav-count { margin-left: auto; font-size: 10px; font-weight: 600; background: var(--color-surface-hover); color: var(--color-text-muted); padding: 1px 6px; border-radius: var(--radius-full); }
+    .sidebar-footer { margin-top: auto; padding: var(--space-4) var(--space-3); border-top: 1px solid var(--color-border); }
+    .user-row { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-2) var(--space-3); border-radius: var(--radius-md); cursor: pointer; transition: var(--transition); }
+    .user-row:hover { background: var(--color-surface-alt); }
+    .avatar { width: 28px; height: 28px; border-radius: var(--radius-full); background: var(--color-primary); display: flex; align-items: center; justify-content: center; font-size: var(--text-xs); font-weight: 600; color: #fff; flex-shrink: 0; }
+    .user-name { font-size: var(--text-sm); color: var(--color-text); font-weight: 500; }
+    .user-plan { font-size: 10px; color: var(--color-text-faint); }
+
+    /* ── Main area ── */
+    .main { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
+    .topbar { height: var(--nav-height); flex-shrink: 0; display: flex; align-items: center; gap: var(--space-3); padding: 0 var(--space-8); border-bottom: 1px solid var(--color-border); background: var(--color-bg); position: sticky; top: 0; z-index: 10; }
+    .breadcrumb { font-size: var(--text-sm); color: var(--color-text-muted); display: flex; align-items: center; gap: var(--space-2); }
+    .breadcrumb a { color: var(--color-text-muted); text-decoration: none; }
+    .breadcrumb a:hover { color: var(--color-text); }
+    .breadcrumb-sep { color: var(--color-text-faint); }
+    .topbar-actions { margin-left: auto; display: flex; gap: var(--space-3); }
+
+    /* ── Project header ── */
+    .project-header {
+      padding: var(--space-8) var(--space-8) var(--space-6);
+      border-bottom: 1px solid var(--color-border);
+    }
+    .project-meta { display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-4); }
+    .project-client-chip {
+      display: flex; align-items: center; gap: var(--space-2);
+      padding: var(--space-1) var(--space-3); border-radius: var(--radius-full);
+      background: var(--color-surface-alt); border: 1px solid var(--color-border);
+      font-size: var(--text-xs); color: var(--color-text-muted);
+    }
+    .project-title { font-size: var(--text-2xl); font-weight: 700; letter-spacing: -0.02em; color: var(--color-text); margin-bottom: var(--space-3); }
+    .project-desc { font-size: var(--text-sm); color: var(--color-text-muted); max-width: 640px; line-height: 1.7; }
+
+    .project-stats {
+      display: flex; gap: var(--space-8); margin-top: var(--space-6);
+    }
+    .ps { }
+    .ps-label { font-size: 10px; color: var(--color-text-faint); font-weight: 500; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
+    .ps-value { font-size: var(--text-base); font-weight: 600; color: var(--color-text); }
+    .ps-sub { font-size: var(--text-xs); color: var(--color-text-muted); margin-top: 2px; }
+
+    /* ── Tabs ── */
+    .tabs { display: flex; gap: 0; padding: 0 var(--space-8); border-bottom: 1px solid var(--color-border); background: var(--color-bg); }
+    .tab { padding: var(--space-4) var(--space-4); font-size: var(--text-sm); color: var(--color-text-muted); cursor: pointer; border-bottom: 2px solid transparent; transition: var(--transition); }
+    .tab:hover { color: var(--color-text); }
+    .tab.active { color: var(--color-primary-light); border-bottom-color: var(--color-primary); }
+
+    /* ── Content ── */
+    .content { padding: var(--space-6) var(--space-8); flex: 1; display: grid; grid-template-columns: 1fr 320px; gap: var(--space-6); }
+
+    /* ── Card ── */
+    .card { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-xl); overflow: hidden; }
+    .card-header { display: flex; align-items: center; justify-content: space-between; padding: var(--space-4) var(--space-5); border-bottom: 1px solid var(--color-border); }
+    .card-title { font-size: var(--text-sm); font-weight: 600; color: var(--color-text); }
+    .card-body { padding: var(--space-4) var(--space-5); }
+
+    /* ── Tasks ── */
+    .task-group { margin-bottom: var(--space-4); }
+    .task-group-label { font-size: 10px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--color-text-faint); margin-bottom: var(--space-2); }
+    .task-item { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-2) var(--space-3); border-radius: var(--radius-md); cursor: pointer; transition: var(--transition); }
+    .task-item:hover { background: var(--color-surface-alt); }
+    .task-check { width: 16px; height: 16px; border-radius: var(--radius-sm); border: 1.5px solid var(--color-border-strong); background: transparent; flex-shrink: 0; }
+    .task-check.done { background: var(--color-primary); border-color: var(--color-primary); display: flex; align-items: center; justify-content: center; color: white; font-size: 10px; }
+    .task-title { font-size: var(--text-sm); color: var(--color-text); }
+    .task-title.done { color: var(--color-text-faint); text-decoration: line-through; }
+    .task-assignee { margin-left: auto; font-size: 10px; color: var(--color-text-faint); }
+
+    /* ── Time log ── */
+    .time-entry { display: flex; align-items: center; justify-content: space-between; padding: var(--space-3) 0; border-bottom: 1px solid var(--color-border); }
+    .time-entry:last-child { border-bottom: none; }
+    .time-desc { font-size: var(--text-sm); color: var(--color-text); }
+    .time-meta { font-size: var(--text-xs); color: var(--color-text-muted); margin-top: 2px; }
+    .time-dur { font-size: var(--text-sm); font-weight: 600; color: var(--color-text); font-family: var(--font-mono); }
+
+    /* ── Sidebar info ── */
+    .info-section { margin-bottom: var(--space-5); }
+    .info-title { font-size: 10px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--color-text-faint); margin-bottom: var(--space-3); }
+    .info-row { display: flex; justify-content: space-between; padding: var(--space-2) 0; border-bottom: 1px solid var(--color-border); }
+    .info-row:last-child { border-bottom: none; }
+    .info-label { font-size: var(--text-xs); color: var(--color-text-muted); }
+    .info-value { font-size: var(--text-xs); color: var(--color-text); font-weight: 500; }
+    .progress-bar { height: 4px; border-radius: var(--radius-full); background: var(--color-surface-hover); overflow: hidden; }
+    .progress-fill { height: 100%; background: var(--color-primary); border-radius: var(--radius-full); }
+    .progress-label { display: flex; justify-content: space-between; margin-bottom: var(--space-2); }
+    .progress-label span { font-size: var(--text-xs); color: var(--color-text-muted); }
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">fl<span>o</span></div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Menu</div>
+      <nav class="sidebar-nav">
+        <a href="dashboard.html" class="nav-item"><span class="icon">⊞</span> Dashboard</a>
+        <a href="clients.html" class="nav-item"><span class="icon">👥</span> Clients <span class="nav-count">8</span></a>
+        <a href="project.html" class="nav-item active"><span class="icon">📋</span> Projects <span class="nav-count">5</span></a>
+        <a href="#" class="nav-item"><span class="icon">⏱</span> Time</a>
+        <a href="#" class="nav-item"><span class="icon">🧾</span> Invoices <span class="nav-count">3</span></a>
+      </nav>
+    </div>
+    <div class="sidebar-footer">
+      <div class="user-row">
+        <div class="avatar">J</div>
+        <div><div class="user-name">Jamie Cole</div><div class="user-plan">Pro plan</div></div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+
+    <!-- Topbar -->
+    <div class="topbar">
+      <div class="breadcrumb">
+        <a href="clients.html">Clients</a>
+        <span class="breadcrumb-sep">/</span>
+        <a href="clients.html">Nova Labs</a>
+        <span class="breadcrumb-sep">/</span>
+        <span style="color: var(--color-text)">Web App MVP</span>
+      </div>
+      <div class="topbar-actions">
+        <a href="#" class="btn btn-ghost btn-sm">Log time</a>
+        <a href="#" class="btn btn-primary btn-sm">Generate invoice</a>
+      </div>
+    </div>
+
+    <!-- Project header -->
+    <div class="project-header">
+      <div class="project-meta">
+        <div class="project-client-chip">👥 Nova Labs</div>
+        <span class="badge badge-active">Active</span>
+      </div>
+      <div class="project-title">Web App MVP</div>
+      <div class="project-desc">Build the MVP for Nova Labs' SaaS product — user auth, dashboard, and core feature set. Fixed-price engagement with weekly check-ins.</div>
+
+      <div class="project-stats">
+        <div class="ps">
+          <div class="ps-label">Budget</div>
+          <div class="ps-value">$8,000</div>
+          <div class="ps-sub">Fixed price</div>
+        </div>
+        <div class="ps">
+          <div class="ps-label">Billed</div>
+          <div class="ps-value">$3,200</div>
+          <div class="ps-sub">$4,800 remaining</div>
+        </div>
+        <div class="ps">
+          <div class="ps-label">Hours</div>
+          <div class="ps-value">38h</div>
+          <div class="ps-sub">of ~80h est.</div>
+        </div>
+        <div class="ps">
+          <div class="ps-label">Due date</div>
+          <div class="ps-value">May 1</div>
+          <div class="ps-sub">59 days left</div>
+        </div>
+        <div class="ps">
+          <div class="ps-label">Rate</div>
+          <div class="ps-value">$120/hr</div>
+          <div class="ps-sub">Blended</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <div class="tab active">Tasks</div>
+      <div class="tab">Time log</div>
+      <div class="tab">Invoices</div>
+      <div class="tab">Notes</div>
+      <div class="tab">Files</div>
+    </div>
+
+    <!-- Content -->
+    <div class="content">
+
+      <!-- Main col — tasks + time -->
+      <div>
+        <div class="card" style="margin-bottom: var(--space-4)">
+          <div class="card-header">
+            <div class="card-title">Tasks</div>
+            <button class="btn btn-ghost btn-sm">+ Add task</button>
+          </div>
+          <div class="card-body">
+
+            <div class="task-group">
+              <div class="task-group-label">In progress</div>
+              <div class="task-item">
+                <div class="task-check"></div>
+                <div class="task-title">User authentication (Clerk integration)</div>
+                <div class="task-assignee">⏱ 8h</div>
+              </div>
+              <div class="task-item">
+                <div class="task-check"></div>
+                <div class="task-title">Dashboard layout + routing</div>
+                <div class="task-assignee">⏱ 6h</div>
+              </div>
+              <div class="task-item">
+                <div class="task-check"></div>
+                <div class="task-title">API endpoints — CRUD for core entity</div>
+                <div class="task-assignee">⏱ 5h</div>
+              </div>
+            </div>
+
+            <div class="task-group">
+              <div class="task-group-label">To do</div>
+              <div class="task-item">
+                <div class="task-check"></div>
+                <div class="task-title">Settings page — account, notifications, billing</div>
+              </div>
+              <div class="task-item">
+                <div class="task-check"></div>
+                <div class="task-title">Email templates + Resend integration</div>
+              </div>
+              <div class="task-item">
+                <div class="task-check"></div>
+                <div class="task-title">Mobile responsive pass</div>
+              </div>
+              <div class="task-item">
+                <div class="task-check"></div>
+                <div class="task-title">Staging deploy + client review</div>
+              </div>
+            </div>
+
+            <div class="task-group">
+              <div class="task-group-label">Done (5)</div>
+              <div class="task-item">
+                <div class="task-check done">✓</div>
+                <div class="task-title done">Project setup — Nuxt 4, Convex, Vercel</div>
+              </div>
+              <div class="task-item">
+                <div class="task-check done">✓</div>
+                <div class="task-title done">Design system — tokens + component library</div>
+              </div>
+              <div class="task-item">
+                <div class="task-check done">✓</div>
+                <div class="task-title done">Database schema v1</div>
+              </div>
+              <div class="task-item">
+                <div class="task-check done">✓</div>
+                <div class="task-title done">Landing page</div>
+              </div>
+              <div class="task-item">
+                <div class="task-check done">✓</div>
+                <div class="task-title done">Kick-off call + requirements doc</div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Recent time entries -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Recent time entries</div>
+            <a href="#" class="btn btn-ghost btn-sm">View all</a>
+          </div>
+          <div class="card-body">
+            <div class="time-entry">
+              <div>
+                <div class="time-desc">Auth integration — Clerk setup + middleware</div>
+                <div class="time-meta">Today · Mar 3</div>
+              </div>
+              <div class="time-dur">2.5h</div>
+            </div>
+            <div class="time-entry">
+              <div>
+                <div class="time-desc">Dashboard layout — sidebar + main grid</div>
+                <div class="time-meta">Yesterday · Mar 2</div>
+              </div>
+              <div class="time-dur">3.0h</div>
+            </div>
+            <div class="time-entry">
+              <div>
+                <div class="time-desc">Database schema — tables and indexes</div>
+                <div class="time-meta">Feb 28</div>
+              </div>
+              <div class="time-dur">1.5h</div>
+            </div>
+            <div class="time-entry">
+              <div>
+                <div class="time-desc">Client call — requirements review</div>
+                <div class="time-meta">Feb 27</div>
+              </div>
+              <div class="time-dur">1.0h</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sidebar col -->
+      <div style="display:flex; flex-direction:column; gap: var(--space-4)">
+
+        <!-- Progress -->
+        <div class="card">
+          <div class="card-header"><div class="card-title">Progress</div></div>
+          <div class="card-body">
+            <div class="info-section">
+              <div class="progress-label">
+                <span>Tasks</span>
+                <span>5 of 12 done</span>
+              </div>
+              <div class="progress-bar"><div class="progress-fill" style="width:42%"></div></div>
+            </div>
+            <div class="info-section">
+              <div class="progress-label">
+                <span>Hours</span>
+                <span>38 of ~80h</span>
+              </div>
+              <div class="progress-bar"><div class="progress-fill" style="width:48%"></div></div>
+            </div>
+            <div class="info-section">
+              <div class="progress-label">
+                <span>Budget</span>
+                <span>$3,200 of $8,000</span>
+              </div>
+              <div class="progress-bar"><div class="progress-fill" style="width:40%"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Details -->
+        <div class="card">
+          <div class="card-header"><div class="card-title">Details</div></div>
+          <div class="card-body">
+            <div class="info-row"><span class="info-label">Client</span><span class="info-value">Nova Labs</span></div>
+            <div class="info-row"><span class="info-label">Status</span><span class="info-value" style="color:var(--color-success)">Active</span></div>
+            <div class="info-row"><span class="info-label">Start date</span><span class="info-value">Feb 15, 2026</span></div>
+            <div class="info-row"><span class="info-label">Due date</span><span class="info-value">May 1, 2026</span></div>
+            <div class="info-row"><span class="info-label">Rate type</span><span class="info-value">Fixed price</span></div>
+            <div class="info-row"><span class="info-label">Hourly rate</span><span class="info-value">$120/hr</span></div>
+          </div>
+        </div>
+
+        <!-- Invoices -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Invoices</div>
+            <button class="btn btn-ghost btn-sm">+ New</button>
+          </div>
+          <div class="card-body">
+            <div class="info-row">
+              <div>
+                <div style="font-size:var(--text-xs); font-weight:500; color:var(--color-text)">INV-021</div>
+                <div style="font-size:10px; font-family:var(--font-mono); color:var(--color-text-faint)">Feb 20 · $1,400</div>
+              </div>
+              <span class="badge badge-paid">Paid</span>
+            </div>
+            <div class="info-row">
+              <div>
+                <div style="font-size:var(--text-xs); font-weight:500; color:var(--color-text)">INV-025</div>
+                <div style="font-size:10px; font-family:var(--font-mono); color:var(--color-text-faint)">Mar 1 · $1,800</div>
+              </div>
+              <span class="badge badge-sent">Sent</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick actions -->
+        <div style="display:flex; flex-direction:column; gap:var(--space-2)">
+          <a href="#" class="btn btn-ghost btn-sm" style="justify-content:center">⏱ Log time</a>
+          <a href="#" class="btn btn-ghost btn-sm" style="justify-content:center">🧾 Generate invoice</a>
+          <a href="#" class="btn btn-ghost btn-sm" style="justify-content:center">📤 Share with client</a>
+        </div>
+
+      </div>
+
+    </div>
+  </main>
+
+</div>
+</body>
+</html>

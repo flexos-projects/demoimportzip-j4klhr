@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Clients — Flo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="tokens.css">
+  <style>
+    /* ── App shell (same as dashboard) ── */
+    .app { display: flex; height: 100dvh; overflow: hidden; }
+    .sidebar {
+      width: var(--sidebar-width); flex-shrink: 0;
+      background: var(--color-surface); border-right: 1px solid var(--color-border);
+      display: flex; flex-direction: column; padding: var(--space-4) 0;
+    }
+    .sidebar-logo { padding: var(--space-3) var(--space-4) var(--space-6); font-size: var(--text-lg); font-weight: 700; letter-spacing: -0.02em; color: var(--color-text); }
+    .sidebar-logo span { color: var(--color-primary-light); }
+    .sidebar-section { padding: 0 var(--space-3); margin-bottom: var(--space-6); }
+    .sidebar-label { font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--color-text-faint); padding: 0 var(--space-2); margin-bottom: var(--space-2); }
+    .sidebar-nav { display: flex; flex-direction: column; gap: 2px; }
+    .nav-item { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-2) var(--space-3); border-radius: var(--radius-md); font-size: var(--text-sm); color: var(--color-text-muted); cursor: pointer; transition: var(--transition); text-decoration: none; }
+    .nav-item:hover { background: var(--color-surface-alt); color: var(--color-text); }
+    .nav-item.active { background: var(--color-primary-faint); color: var(--color-primary-light); }
+    .nav-item .icon { font-size: 15px; width: 18px; text-align: center; }
+    .nav-count { margin-left: auto; font-size: 10px; font-weight: 600; background: var(--color-surface-hover); color: var(--color-text-muted); padding: 1px 6px; border-radius: var(--radius-full); }
+    .sidebar-footer { margin-top: auto; padding: var(--space-4) var(--space-3); border-top: 1px solid var(--color-border); }
+    .user-row { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-2) var(--space-3); border-radius: var(--radius-md); cursor: pointer; transition: var(--transition); }
+    .user-row:hover { background: var(--color-surface-alt); }
+    .avatar { width: 28px; height: 28px; border-radius: var(--radius-full); background: var(--color-primary); display: flex; align-items: center; justify-content: center; font-size: var(--text-xs); font-weight: 600; color: #fff; flex-shrink: 0; }
+    .user-name { font-size: var(--text-sm); color: var(--color-text); font-weight: 500; }
+    .user-plan { font-size: 10px; color: var(--color-text-faint); }
+    .main { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
+    .topbar { height: var(--nav-height); flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; padding: 0 var(--space-8); border-bottom: 1px solid var(--color-border); background: var(--color-bg); position: sticky; top: 0; z-index: 10; }
+    .page-title { font-size: var(--text-lg); font-weight: 600; letter-spacing: -0.01em; color: var(--color-text); }
+    .topbar-actions { display: flex; gap: var(--space-3); align-items: center; }
+    .content { padding: var(--space-8); flex: 1; }
+
+    /* ── Search + filter ── */
+    .toolbar {
+      display: flex; gap: var(--space-3); align-items: center;
+      margin-bottom: var(--space-6);
+    }
+    .search-input {
+      flex: 1; max-width: 320px;
+      display: flex; align-items: center; gap: var(--space-2);
+      padding: var(--space-2) var(--space-4);
+      background: var(--color-surface); border: 1px solid var(--color-border);
+      border-radius: var(--radius-md); color: var(--color-text-muted);
+      font-size: var(--text-sm);
+    }
+    .filter-pills { display: flex; gap: var(--space-2); }
+    .pill {
+      padding: var(--space-1) var(--space-3);
+      border-radius: var(--radius-full); font-size: var(--text-xs); font-weight: 500;
+      cursor: pointer; border: 1px solid var(--color-border);
+      background: transparent; color: var(--color-text-muted);
+      transition: var(--transition);
+    }
+    .pill.active { background: var(--color-primary-faint); border-color: var(--color-primary); color: var(--color-primary-light); }
+
+    /* ── Client list ── */
+    .client-table {
+      background: var(--color-surface); border: 1px solid var(--color-border);
+      border-radius: var(--radius-xl); overflow: hidden;
+    }
+    .table-header {
+      display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 120px;
+      padding: var(--space-3) var(--space-6);
+      border-bottom: 1px solid var(--color-border);
+      font-size: 10px; font-weight: 600; letter-spacing: 0.06em;
+      text-transform: uppercase; color: var(--color-text-faint);
+    }
+    .client-row {
+      display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 120px;
+      align-items: center;
+      padding: var(--space-4) var(--space-6);
+      border-bottom: 1px solid var(--color-border);
+      transition: var(--transition);
+      text-decoration: none;
+    }
+    .client-row:last-child { border-bottom: none; }
+    .client-row:hover { background: var(--color-surface-alt); }
+    .client-info { display: flex; align-items: center; gap: var(--space-3); }
+    .client-avatar {
+      width: 32px; height: 32px; border-radius: var(--radius-full);
+      background: var(--color-surface-hover); border: 1px solid var(--color-border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: var(--text-xs); font-weight: 600; color: var(--color-primary-light);
+      flex-shrink: 0;
+    }
+    .client-name { font-size: var(--text-sm); font-weight: 500; color: var(--color-text); }
+    .client-company { font-size: var(--text-xs); color: var(--color-text-muted); }
+    .col { font-size: var(--text-sm); color: var(--color-text-muted); }
+    .col-amount { font-size: var(--text-sm); font-weight: 600; color: var(--color-text); }
+
+    /* ── Side panel (client detail) ── */
+    .panel {
+      position: fixed; top: 0; right: 0; bottom: 0;
+      width: 360px; background: var(--color-surface-alt);
+      border-left: 1px solid var(--color-border);
+      padding: var(--space-6); overflow-y: auto;
+      display: flex; flex-direction: column; gap: var(--space-6);
+    }
+    .panel-header { display: flex; align-items: flex-start; justify-content: space-between; }
+    .panel-avatar {
+      width: 56px; height: 56px; border-radius: var(--radius-full);
+      background: var(--color-primary-faint); border: 2px solid rgba(139,92,246,0.3);
+      display: flex; align-items: center; justify-content: center;
+      font-size: var(--text-xl); font-weight: 700; color: var(--color-primary-light);
+    }
+    .panel-name { font-size: var(--text-base); font-weight: 600; color: var(--color-text); margin-top: var(--space-3); }
+    .panel-company { font-size: var(--text-sm); color: var(--color-text-muted); }
+    .panel-section-title { font-size: var(--text-xs); font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--color-text-faint); margin-bottom: var(--space-3); }
+    .info-row { display: flex; justify-content: space-between; padding: var(--space-2) 0; border-bottom: 1px solid var(--color-border); }
+    .info-row:last-child { border-bottom: none; }
+    .info-label { font-size: var(--text-xs); color: var(--color-text-muted); }
+    .info-value { font-size: var(--text-xs); color: var(--color-text); font-weight: 500; }
+    .mini-project {
+      padding: var(--space-3);
+      background: var(--color-surface); border: 1px solid var(--color-border);
+      border-radius: var(--radius-md); margin-bottom: var(--space-2);
+    }
+    .mini-project-name { font-size: var(--text-xs); font-weight: 500; color: var(--color-text); }
+    .mini-project-meta { font-size: 10px; color: var(--color-text-muted); margin-top: 2px; }
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">fl<span>o</span></div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Menu</div>
+      <nav class="sidebar-nav">
+        <a href="dashboard.html" class="nav-item"><span class="icon">⊞</span> Dashboard</a>
+        <a href="clients.html" class="nav-item active"><span class="icon">👥</span> Clients <span class="nav-count">8</span></a>
+        <a href="project.html" class="nav-item"><span class="icon">📋</span> Projects <span class="nav-count">5</span></a>
+        <a href="#" class="nav-item"><span class="icon">⏱</span> Time</a>
+        <a href="#" class="nav-item"><span class="icon">🧾</span> Invoices <span class="nav-count">3</span></a>
+      </nav>
+    </div>
+    <div class="sidebar-footer">
+      <div class="user-row">
+        <div class="avatar">J</div>
+        <div><div class="user-name">Jamie Cole</div><div class="user-plan">Pro plan</div></div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main" style="margin-right: 360px">
+    <div class="topbar">
+      <div class="page-title">Clients</div>
+      <div class="topbar-actions">
+        <a href="#" class="btn btn-primary btn-sm">+ Add client</a>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <div class="toolbar">
+        <div class="search-input">🔍 Search clients...</div>
+        <div class="filter-pills">
+          <div class="pill active">All (8)</div>
+          <div class="pill">Active (5)</div>
+          <div class="pill">Inactive (3)</div>
+        </div>
+      </div>
+
+      <div class="client-table">
+        <div class="table-header">
+          <div>Client</div>
+          <div>Projects</div>
+          <div>Outstanding</div>
+          <div>Total billed</div>
+          <div>Status</div>
+        </div>
+
+        <a href="project.html" class="client-row" style="text-decoration:none">
+          <div class="client-info">
+            <div class="client-avatar">AC</div>
+            <div>
+              <div class="client-name">Acme Corp</div>
+              <div class="client-company">mark@acmecorp.com</div>
+            </div>
+          </div>
+          <div class="col">3</div>
+          <div class="col">—</div>
+          <div class="col-amount">$12,400</div>
+          <span class="badge badge-active">Active</span>
+        </a>
+
+        <a href="project.html" class="client-row" style="text-decoration:none">
+          <div class="client-info">
+            <div class="client-avatar">NL</div>
+            <div>
+              <div class="client-name">Nova Labs</div>
+              <div class="client-company">sarah@novalabs.io</div>
+            </div>
+          </div>
+          <div class="col">1</div>
+          <div class="col col-amount">$1,800</div>
+          <div class="col-amount">$5,200</div>
+          <span class="badge badge-active">Active</span>
+        </a>
+
+        <a href="#" class="client-row" style="text-decoration:none">
+          <div class="client-info">
+            <div class="client-avatar">BI</div>
+            <div>
+              <div class="client-name">Bright Ideas</div>
+              <div class="client-company">tom@brightideas.co</div>
+            </div>
+          </div>
+          <div class="col">2</div>
+          <div class="col col-amount" style="color:var(--color-error)">$1,200</div>
+          <div class="col-amount">$3,800</div>
+          <span class="badge badge-overdue">Overdue</span>
+        </a>
+
+        <a href="#" class="client-row" style="text-decoration:none">
+          <div class="client-info">
+            <div class="client-avatar">KC</div>
+            <div>
+              <div class="client-name">Kira & Co</div>
+              <div class="client-company">kira@kiraandco.com</div>
+            </div>
+          </div>
+          <div class="col">1</div>
+          <div class="col col-amount" style="color:var(--color-error)">$150</div>
+          <div class="col-amount">$950</div>
+          <span class="badge badge-overdue">Overdue</span>
+        </a>
+
+        <a href="#" class="client-row" style="text-decoration:none">
+          <div class="client-info">
+            <div class="client-avatar">PG</div>
+            <div>
+              <div class="client-name">Pixel Garden</div>
+              <div class="client-company">hello@pixelgarden.design</div>
+            </div>
+          </div>
+          <div class="col">0</div>
+          <div class="col">—</div>
+          <div class="col-amount">$2,100</div>
+          <span class="badge badge-draft">Inactive</span>
+        </a>
+
+        <a href="#" class="client-row" style="text-decoration:none">
+          <div class="client-info">
+            <div class="client-avatar">WS</div>
+            <div>
+              <div class="client-name">Wave Studio</div>
+              <div class="client-company">ops@wavestudio.io</div>
+            </div>
+          </div>
+          <div class="col">0</div>
+          <div class="col">—</div>
+          <div class="col-amount">$800</div>
+          <span class="badge badge-draft">Inactive</span>
+        </a>
+
+        <a href="#" class="client-row" style="text-decoration:none">
+          <div class="client-info">
+            <div class="client-avatar">FL</div>
+            <div>
+              <div class="client-name">Flux Digital</div>
+              <div class="client-company">james@fluxdigital.com</div>
+            </div>
+          </div>
+          <div class="col">1</div>
+          <div class="col">—</div>
+          <div class="col-amount">$4,200</div>
+          <span class="badge badge-active">Active</span>
+        </a>
+
+        <a href="#" class="client-row" style="text-decoration:none">
+          <div class="client-info">
+            <div class="client-avatar">TH</div>
+            <div>
+              <div class="client-name">The Hive</div>
+              <div class="client-company">ceo@thehive.team</div>
+            </div>
+          </div>
+          <div class="col">2</div>
+          <div class="col">—</div>
+          <div class="col-amount">$6,750</div>
+          <span class="badge badge-active">Active</span>
+        </a>
+
+      </div>
+    </div>
+  </main>
+
+  <!-- Side panel — selected client -->
+  <aside class="panel">
+    <div class="panel-header">
+      <div class="panel-avatar">NL</div>
+      <button class="btn btn-ghost btn-sm">Edit</button>
+    </div>
+    <div>
+      <div class="panel-name">Nova Labs</div>
+      <div class="panel-company">Startup · San Francisco, CA</div>
+    </div>
+
+    <div>
+      <div class="panel-section-title">Contact</div>
+      <div class="info-row"><span class="info-label">Name</span><span class="info-value">Sarah Kim</span></div>
+      <div class="info-row"><span class="info-label">Email</span><span class="info-value">sarah@novalabs.io</span></div>
+      <div class="info-row"><span class="info-label">Phone</span><span class="info-value">+1 415 000 1234</span></div>
+      <div class="info-row"><span class="info-label">Rate</span><span class="info-value">$120/hr</span></div>
+    </div>
+
+    <div>
+      <div class="panel-section-title">Projects (1)</div>
+      <div class="mini-project">
+        <div class="mini-project-name">Web App MVP</div>
+        <div class="mini-project-meta">Active · Due May 1 · 38h logged</div>
+      </div>
+    </div>
+
+    <div>
+      <div class="panel-section-title">Financials</div>
+      <div class="info-row"><span class="info-label">Total billed</span><span class="info-value">$5,200</span></div>
+      <div class="info-row"><span class="info-label">Paid</span><span class="info-value" style="color:var(--color-success)">$3,400</span></div>
+      <div class="info-row"><span class="info-label">Outstanding</span><span class="info-value" style="color:var(--color-warning)">$1,800</span></div>
+    </div>
+
+    <div>
+      <div class="panel-section-title">Notes</div>
+      <div style="font-size: var(--text-xs); color: var(--color-text-muted); line-height: 1.6; background: var(--color-surface); padding: var(--space-3); border-radius: var(--radius-md); border: 1px solid var(--color-border)">
+        Met at ProductHunt meetup March 2025. Looking to build an MVP in 3 months. Prefers async Slack communication. Invoices due net-14.
+      </div>
+    </div>
+
+    <div style="display:flex; gap: var(--space-2)">
+      <a href="#" class="btn btn-primary btn-sm" style="flex:1; justify-content:center">+ New invoice</a>
+      <a href="project.html" class="btn btn-ghost btn-sm" style="flex:1; justify-content:center">View project</a>
+    </div>
+  </aside>
+
+</div>
+</body>
+</html>
