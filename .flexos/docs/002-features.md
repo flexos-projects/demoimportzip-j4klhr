@@ -7,10 +7,15 @@ slug: 002-features
 title: Features Overview
 description: What Flo does — the complete freelancer workflow in one tool
 status: active
-tags: []
 created: 2026-01-01
 last_modified: 2026-01-01
-relatesTo: []
+priority: medium
+tags:
+  - ""
+  - "testatg"
+relatesTo:
+  - ""
+  - "pages/001-home.md"
 ---
 
 # Features Overview
