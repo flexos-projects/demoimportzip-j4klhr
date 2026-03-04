@@ -6,11 +6,13 @@ subtype: feature
 slug: 001-client-management
 title: Client Management
 description: Add and manage clients — contact details, brief, status, full project history
-status: active
-tags: [core]
+status: roadmap
 created: 2026-01-01
 last_modified: 2026-01-01
 relatesTo: [page.003-clients, database.001-clients]
+priority: medium
+tags:
+  - "core"
 ---
 
 # Client Management
